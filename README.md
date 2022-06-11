@@ -1,5 +1,5 @@
 # SkeletonConnector
-Tool to constrain two skeletons together in Autodesk Maya
+Tool to constrain two referenced skeletons together in Autodesk Maya
 
 
 To run the tool
