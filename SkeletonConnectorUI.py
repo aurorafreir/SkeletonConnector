@@ -68,18 +68,21 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.setMaximumSize(600, 200)
 
         self.driver_label = QtWidgets.QLabel(self, text="Driver Namespace")
+        self.driver_label.setFixedWidth(120)
         self.driver_textbox = QtWidgets.QLineEdit(self)
         self.driver_textbox.setPlaceholderText("Driver namespace")
         self.driver_pickwhip = QtWidgets.QPushButton(self, text="Get from selection")
         self.driver_pickwhip.clicked.connect(self.driver_ns_pickwhip)
 
         self.driven_label = QtWidgets.QLabel(self, text="Driven Namespace")
+        self.driven_label.setFixedWidth(120)
         self.driven_textbox = QtWidgets.QLineEdit(self)
         self.driven_textbox.setPlaceholderText("Driven namespace")
         self.driven_pickwhip = QtWidgets.QPushButton(self, text="Get from selection")
         self.driven_pickwhip.clicked.connect(self.driven_ns_pickwhip)
 
         self.tlj_label = QtWidgets.QLabel(self, text="Top Level Joint")
+        self.tlj_label.setFixedWidth(120)
         self.tlj_textbox = QtWidgets.QLineEdit(self)
         self.tlj_textbox.setPlaceholderText("Top Level Joint Name")
         self.tlj_pickwhip = QtWidgets.QPushButton(self, text="Get from selection")
@@ -122,15 +125,15 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.setLayout(self.h_layout)
 
 
+def run():
+    try:
+        pass
+        #ui.deleteLater()
+    except NameError as e:
+        pass
 
-try:
-    pass
-    #ui.deleteLater()
-except NameError as e:
-    pass
+    if pm.window("SkeletonConnectorUI_UniqueIdWorkspaceControl", exists=True):
+        pm.deleteUI("SkeletonConnectorUI_UniqueIdWorkspaceControl")
 
-if pm.window("SkeletonConnectorUI_UniqueIdWorkspaceControl", exists=True):
-    pm.deleteUI("SkeletonConnectorUI_UniqueIdWorkspaceControl")
-
-ui = SkeletonConnectorUI()
-ui.show(dockable=True)
+    ui = SkeletonConnectorUI()
+    ui.show(dockable=True)
