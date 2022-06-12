@@ -12,4 +12,4 @@ reload(SkeletonConnectorUI)
 SkeletonConnectorUI.run()
 ```
 
-![image](https://user-images.githubusercontent.com/37246948/173188195-15972805-f0dd-4602-9859-0ddf6c8488c3.png)
+![image](https://user-images.githubusercontent.com/37246948/173226168-60e193df-33b9-4902-b936-b9eac16fbbf7.png)
