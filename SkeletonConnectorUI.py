@@ -18,8 +18,10 @@ import maya.OpenMayaUI as omui
 # LOCAL APP IMPORTS
 if sys.version_info.major == 3:
     from . import SkeletonConnectorFunctional
+    from importlib import reload
 else:
     import SkeletonConnectorFunctional
+reload(SkeletonConnectorFunctional)
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
@@ -32,13 +34,16 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super(SkeletonConnectorUI, self).__init__()
         self.create_widget()
+        self.populate_constraint_list()
 
     def execte_skeleton_connect(self):
+        reload(SkeletonConnectorFunctional)
         SkeletonConnectorFunctional.skeleton_attach(
             rig_ns=self.driver_textbox.text(),
             groom_ns=self.driven_textbox.text(),
             top_level_joint=self.tlj_textbox.text()
         )
+        self.populate_constraint_list()
 
     def driver_ns_pickwhip(self):
         selection = pm.selected()[0]
@@ -55,6 +60,17 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         tlj_name = selection.name().split(":")[1]
         self.tlj_textbox.setText(tlj_name)
 
+    def populate_constraint_list(self):
+        # Read data from functional
+        # Update list widget
+        constraint_data = SkeletonConnectorFunctional.load_scene_constraint_data()
+        self.existing_constraints.clear()
+        list_item = QtWidgets.QListWidgetItem(self.existing_constraints)
+        for index, data in enumerate(constraint_data):
+            list_item.setText(f"{data}")
+            list_item = QtWidgets.QListWidgetItem(self.existing_constraints)
+            list_item.setSelected(True)
+
     def create_widget(self):
         self.setWindowFlags(QtCore.Qt.Tool)
 
@@ -65,7 +81,7 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.setObjectName('SkeletonConnectorUI_UniqueId')
         self.setWindowTitle('Skeleton Connector Tool')
         self.setMinimumSize(600, 200)
-        self.setMaximumSize(600, 200)
+        # self.setMaximumSize(600, 200)
 
         self.driver_label = QtWidgets.QLabel(self, text="Driver Namespace")
         self.driver_label.setFixedWidth(120)
@@ -92,9 +108,17 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.connect_button = QtWidgets.QPushButton(self, text="Connect Skeletons")
         self.connect_button.clicked.connect(self.execte_skeleton_connect)
 
+        # TODO Save constrained skeletons per scene
+        # Existing constraint networks panel
+        self.existing_constraints = QtWidgets.QListWidget(self)
+        self.existing_constraints_label = QtWidgets.QLabel(self, text="Existing Constraint Setups: ")
+        # self.existing_constraints.setFixedSize(280, 400)  # Width, Height
+
         # LAYOUTS
         self.h_layout = QtWidgets.QHBoxLayout()
         self.v_layout = QtWidgets.QVBoxLayout()
+        self.existing_constraints_layout = QtWidgets.QVBoxLayout()
+        self.container_layout = QtWidgets.QVBoxLayout()
 
         # textbox layouts
         self.driver_h_layout = QtWidgets.QHBoxLayout()
@@ -112,6 +136,10 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.tlj_h_layout.addWidget(self.tlj_textbox)
         self.tlj_h_layout.addWidget(self.tlj_pickwhip)
 
+        # existing constraints panel
+        self.existing_constraints_layout.addWidget(self.existing_constraints_label)
+        self.existing_constraints_layout.addWidget(self.existing_constraints)
+
         # final layout
         self.v_layout.addStretch()
         self.v_layout.addLayout(self.driver_h_layout)
@@ -122,7 +150,10 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
 
         self.h_layout.addLayout(self.v_layout)
 
-        self.setLayout(self.h_layout)
+        self.container_layout.addLayout(self.h_layout)
+        self.container_layout.addLayout(self.existing_constraints_layout)
+
+        self.setLayout(self.container_layout)
 
 
 def run():
