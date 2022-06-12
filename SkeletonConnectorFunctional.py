@@ -28,3 +28,30 @@ def skeleton_attach(rig_ns="", groom_ns="", top_level_joint=""):
             maya.cmds.parentConstraint(driver, driven)
 
         print("Constrained {} to {}".format(driver, driven))
+
+    ### SCENE DATA ORGANIZATION
+    # get scene info from fileInfo
+    if maya.cmds.fileInfo("skeleton_attach", query=True):
+        skel_attach_scene_info = maya.cmds.fileInfo("skeleton_attach", query=True)[0]
+    else:
+        skel_attach_scene_info = ""
+    # append new scene info
+    new_info = f"{rig_ns}|{groom_ns}|{top_level_joint}"
+    # old_info = skel_attach_scene_info
+    if skel_attach_scene_info:
+        skel_attach_scene_info = f"{skel_attach_scene_info},{new_info}"
+    else:
+        skel_attach_scene_info = f"{new_info}"
+    maya.cmds.fileInfo("skeleton_attach", skel_attach_scene_info)
+
+    print("full info: ", skel_attach_scene_info)
+
+def load_scene_constraint_data():
+    scene_data = maya.cmds.fileInfo("skeleton_attach", query=True)[0]
+    parsed_scene_data = scene_data.split(",")
+    sorted_scene_data = []
+    for item in parsed_scene_data:
+        item_split = item.split("|")
+        data = f"{item_split[0]}:{item_split[2]}   <--   {item_split[1]}:{item_split[2]}"
+        sorted_scene_data.append(data)
+    return sorted_scene_data
