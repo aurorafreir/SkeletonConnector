@@ -47,11 +47,13 @@ def skeleton_attach(rig_ns="", groom_ns="", top_level_joint=""):
     print("full info: ", skel_attach_scene_info)
 
 def load_scene_constraint_data():
-    scene_data = maya.cmds.fileInfo("skeleton_attach", query=True)[0]
-    parsed_scene_data = scene_data.split(",")
+    scene_data = maya.cmds.fileInfo("skeleton_attach", query=True)
     sorted_scene_data = []
-    for item in parsed_scene_data:
-        item_split = item.split("|")
-        data = f"{item_split[0]}:{item_split[2]}   <--   {item_split[1]}:{item_split[2]}"
-        sorted_scene_data.append(data)
+    if scene_data:
+        scene_data = maya.cmds.fileInfo("skeleton_attach", query=True)[0]
+        parsed_scene_data = scene_data.split(",")
+        for item in parsed_scene_data:
+            item_split = item.split("|")
+            data = f"{item_split[0]}:{item_split[2]}   <--   {item_split[1]}:{item_split[2]}"
+            sorted_scene_data.append(data)
     return sorted_scene_data
