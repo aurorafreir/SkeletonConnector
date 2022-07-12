@@ -5,30 +5,24 @@
 # SYSTEM IMPORTS
 
 # STANDARD LIB IMPORTS
-import sys
-
-from PySide2 import QtGui
-from PySide2 import QtWidgets
-from PySide2 import QtCore
-from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
-import pymel.core as pm
-from shiboken2 import wrapInstance
-import maya.OpenMayaUI as omui
 
 # LOCAL APP IMPORTS
-if sys.version_info.major == 3:
-    from . import SkeletonConnectorFunctional
-    from importlib import reload
-else:
-    import SkeletonConnectorFunctional
+from importlib import reload
+
+import maya.OpenMayaUI as omui
+import pymel.core as pm
+from PySide2 import QtCore
+from PySide2 import QtWidgets
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
+from shiboken2 import wrapInstance
+
+from . import SkeletonConnectorFunctional
+
 reload(SkeletonConnectorFunctional)
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
-    if sys.version_info.major == 3:
-        return wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
-    else:
-        return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
+    return wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
 
 class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
@@ -36,13 +30,27 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.create_widget()
         self.populate_constraint_list()
 
-    def execte_skeleton_connect(self):
+    def execute_skeleton_connect(self):
         reload(SkeletonConnectorFunctional)
         SkeletonConnectorFunctional.skeleton_attach(
             rig_ns=self.driver_textbox.text(),
             groom_ns=self.driven_textbox.text(),
             top_level_joint=self.tlj_textbox.text()
         )
+        self.populate_constraint_list()
+
+    def execute_skeleton_detach(self):
+        reload(SkeletonConnectorFunctional)
+        selected_items = self.existing_constraints.selectedItems()
+        for item in selected_items:
+            text = item.text()
+            rig_ns = text.split("<--")[0][:-2]
+            groom_ns = text.split("<--")[1][2:].split("(tlj")[0][:-2]
+            top_level_joint = text.split("tlj:")[1][:-1]
+            print(rig_ns, groom_ns, top_level_joint)
+            SkeletonConnectorFunctional.skeleton_detach(rig_ns=rig_ns,
+                                                        groom_ns=groom_ns,
+                                                        top_level_joint=top_level_joint)
         self.populate_constraint_list()
 
     def driver_ns_pickwhip(self):
@@ -106,7 +114,10 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
 
 
         self.connect_button = QtWidgets.QPushButton(self, text="Connect Skeletons")
-        self.connect_button.clicked.connect(self.execte_skeleton_connect)
+        self.connect_button.clicked.connect(self.execute_skeleton_connect)
+
+        self.detach_button = QtWidgets.QPushButton(self, text="Detach Skeletons")
+        self.detach_button.clicked.connect(self.execute_skeleton_detach)
 
         # TODO Save constrained skeletons per scene
         # Existing constraint networks panel
@@ -146,6 +157,7 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.v_layout.addLayout(self.driven_h_layout)
         self.v_layout.addLayout(self.tlj_h_layout)
         self.v_layout.addWidget(self.connect_button)
+        self.v_layout.addWidget(self.detach_button)
         self.v_layout.addStretch()
 
         self.h_layout.addLayout(self.v_layout)
