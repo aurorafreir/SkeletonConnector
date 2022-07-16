@@ -27,20 +27,19 @@ def maya_main_window():
 class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super(SkeletonConnectorUI, self).__init__()
+        self.SkeletonConnectorFunctional = SkeletonConnectorFunctional.Skeleton_Connector_Functional()
         self.create_widget()
         self.populate_constraint_list()
 
     def execute_skeleton_connect(self):
-        reload(SkeletonConnectorFunctional)
-        SkeletonConnectorFunctional.skeleton_attach(
+        self.SkeletonConnectorFunctional.skeleton_attach(
             rig_ns=self.driver_textbox.text(),
-            groom_ns=self.driven_textbox.text(),
+            driven_ns=self.driven_textbox.text(),
             top_level_joint=self.tlj_textbox.text()
         )
         self.populate_constraint_list()
 
     def execute_skeleton_detach(self):
-        reload(SkeletonConnectorFunctional)
         selected_items = self.existing_constraints.selectedItems()
         for item in selected_items:
             text = item.text()
@@ -48,8 +47,8 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
             groom_ns = text.split("<--")[1][2:].split("(tlj")[0][:-2]
             top_level_joint = text.split("tlj:")[1][:-1]
             print(rig_ns, groom_ns, top_level_joint)
-            SkeletonConnectorFunctional.skeleton_detach(rig_ns=rig_ns,
-                                                        groom_ns=groom_ns,
+            self.SkeletonConnectorFunctional.skeleton_detach(rig_ns=rig_ns,
+                                                        driven_ns=groom_ns,
                                                         top_level_joint=top_level_joint)
         self.populate_constraint_list()
 
@@ -71,7 +70,7 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
     def populate_constraint_list(self):
         # Read data from functional
         # Update list widget
-        constraint_data = SkeletonConnectorFunctional.load_scene_constraint_data()
+        constraint_data = self.SkeletonConnectorFunctional.load_scene_constraint_data()
         self.existing_constraints.clear()
         list_item = QtWidgets.QListWidgetItem(self.existing_constraints)
         for index, data in enumerate(constraint_data):
@@ -119,7 +118,6 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.detach_button = QtWidgets.QPushButton(self, text="Detach Skeletons")
         self.detach_button.clicked.connect(self.execute_skeleton_detach)
 
-        # TODO Save constrained skeletons per scene
         # Existing constraint networks panel
         self.existing_constraints = QtWidgets.QListWidget(self)
         self.existing_constraints_label = QtWidgets.QLabel(self, text="Existing Constraint Setups: ")
