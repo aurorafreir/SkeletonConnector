@@ -14,6 +14,7 @@ import pymel.core as pm
 # LOCAL APP IMPORTS
 
 # TODO replace Parent Constraint with a Matrix Constraint for performance and scene cleanliness
+# TODO Replace Parent Constraint setup with TRS as default
 # TODO Write data serialize function ([array[array]]> string
 # TODO Write data deserialize function (string > [array[array]])
 # TODO Rewrite in Pymel
@@ -26,7 +27,7 @@ class Skeleton_Connector_Functional():
         data_exists = True if re.search('[a-zA-Z]', str(maya.cmds.fileInfo(self.fileinfo_key, query=True))) else False
         return data_exists
 
-    def skeleton_attach(self, rig_ns: str, driven_ns: str, top_level_joint: str):
+    def skeleton_attach(self, rig_ns: str, driven_ns: str, top_level_joint: str, connect_type:str):
         rig_tlj = f"{rig_ns}:{top_level_joint}"
         driven_tlj = f"{driven_ns}:{top_level_joint}"
 
@@ -37,11 +38,20 @@ class Skeleton_Connector_Functional():
             joint_name = x.split(":")[1]
             driven = f"{driven_ns}:{joint_name}"
             driver = x
+            if connect_type == "Direct TransRotScale":
+                attrs = ["tx", "ty", "tz", "rx", "ry", "rz", "sx", "sy", "sz"]
+                for attr in attrs:
+                    try:
+                        maya.cmds.connectAttr(f"{driver}.{attr}", f"{driven}.{attr}")
+                    except:
+                        pass
+                print(f"Connected TRS of {driver} to {driven}")
 
-            if maya.cmds.objExists(driven):
-                maya.cmds.parentConstraint(driver, driven)
+            elif connect_type == "Parent Constraint":
+                if maya.cmds.objExists(driven):
+                    maya.cmds.parentConstraint(driver, driven)
 
-            print(f"Constrained {driver} to {driven}")
+                print(f"Parent constrained {driver} to {driven}")
 
         # Get scene info from fileInfo
         if self.data_in_fileinfo_key():
@@ -75,7 +85,7 @@ class Skeleton_Connector_Functional():
         return sorted_scene_data
 
 
-    def skeleton_detach(self, rig_ns: str, driven_ns: str, top_level_joint: str):
+    def skeleton_detach(self, rig_ns: str, driven_ns: str, top_level_joint: str, connect_type:str):
         # hate how fileinfo smushes everything down to a single string, actual nightmare
         scene_data = maya.cmds.fileInfo(self.fileinfo_key, query=True)
         print(scene_data)

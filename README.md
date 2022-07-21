@@ -1,13 +1,11 @@
 # SkeletonConnector
-Tool to constrain two referenced skeletons together in Autodesk Maya
+Tool to connect two referenced skeletons together in Autodesk Maya, with one as the driver and one as the driven
 
 
 To run the tool
 ```python
 from SkeletonConnector import SkeletonConnectorUI
 import sys
-if sys.version_info.major == 3:
-    from importlib import reload
 reload(SkeletonConnectorUI)
 SkeletonConnectorUI.run()
 ```

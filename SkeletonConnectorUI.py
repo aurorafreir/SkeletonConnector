@@ -35,7 +35,8 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.SkeletonConnectorFunctional.skeleton_attach(
             rig_ns=self.driver_textbox.text(),
             driven_ns=self.driven_textbox.text(),
-            top_level_joint=self.tlj_textbox.text()
+            top_level_joint=self.tlj_textbox.text(),
+            connect_type=self.connect_type_dropdown.currentText()
         )
         self.populate_constraint_list()
 
@@ -114,6 +115,8 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
 
         self.connect_button = QtWidgets.QPushButton(self, text="Connect Skeletons")
         self.connect_button.clicked.connect(self.execute_skeleton_connect)
+        self.connect_type_dropdown = QtWidgets.QComboBox(self)
+        self.connect_type_dropdown.addItems(["Direct TransRotScale", "Parent Constraint"])
 
         self.detach_button = QtWidgets.QPushButton(self, text="Detach Skeletons")
         self.detach_button.clicked.connect(self.execute_skeleton_detach)
@@ -149,12 +152,16 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.existing_constraints_layout.addWidget(self.existing_constraints_label)
         self.existing_constraints_layout.addWidget(self.existing_constraints)
 
+        self.connect_layout = QtWidgets.QHBoxLayout()
+        self.connect_layout.addWidget(self.connect_button)
+        self.connect_layout.addWidget(self.connect_type_dropdown)
+
         # final layout
         self.v_layout.addStretch()
         self.v_layout.addLayout(self.driver_h_layout)
         self.v_layout.addLayout(self.driven_h_layout)
         self.v_layout.addLayout(self.tlj_h_layout)
-        self.v_layout.addWidget(self.connect_button)
+        self.v_layout.addLayout(self.connect_layout)
         self.v_layout.addWidget(self.detach_button)
         self.v_layout.addStretch()
 
