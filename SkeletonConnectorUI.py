@@ -35,8 +35,7 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         self.SkeletonConnectorFunctional.skeleton_attach(
             rig_ns=self.driver_textbox.text(),
             driven_ns=self.driven_textbox.text(),
-            top_level_joint=self.tlj_textbox.text(),
-            connect_type=self.connect_type_dropdown.currentText()
+            top_level_joint=self.tlj_textbox.text()
         )
         self.populate_constraint_list()
 
@@ -44,8 +43,8 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         selected_items = self.existing_constraints.selectedItems()
         for item in selected_items:
             text = item.text()
-            rig_ns = text.split("<--")[0][:-2]
-            groom_ns = text.split("<--")[1][2:].split("(tlj")[0][:-2]
+            rig_ns = text.split("<--")[1][2:].split("(tlj")[0][:-2]
+            groom_ns = text.split("<--")[0][:-2]
             top_level_joint = text.split("tlj:")[1][:-1]
             print(rig_ns, groom_ns, top_level_joint)
             self.SkeletonConnectorFunctional.skeleton_detach(rig_ns=rig_ns,
@@ -115,8 +114,6 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
 
         self.connect_button = QtWidgets.QPushButton(self, text="Connect Skeletons")
         self.connect_button.clicked.connect(self.execute_skeleton_connect)
-        self.connect_type_dropdown = QtWidgets.QComboBox(self)
-        self.connect_type_dropdown.addItems(["Direct TransRotScale", "Parent Constraint"])
 
         self.detach_button = QtWidgets.QPushButton(self, text="Detach Skeletons")
         self.detach_button.clicked.connect(self.execute_skeleton_detach)
@@ -124,7 +121,6 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
         # Existing constraint networks panel
         self.existing_constraints = QtWidgets.QListWidget(self)
         self.existing_constraints_label = QtWidgets.QLabel(self, text="Existing Constraint Setups: ")
-        # self.existing_constraints.setFixedSize(280, 400)  # Width, Height
 
         # LAYOUTS
         self.h_layout = QtWidgets.QHBoxLayout()
@@ -154,7 +150,6 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
 
         self.connect_layout = QtWidgets.QHBoxLayout()
         self.connect_layout.addWidget(self.connect_button)
-        self.connect_layout.addWidget(self.connect_type_dropdown)
 
         # final layout
         self.v_layout.addStretch()
@@ -175,8 +170,7 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
 
 def run():
     try:
-        pass
-        #ui.deleteLater()
+        ui.deleteLater()
     except NameError as e:
         pass
 

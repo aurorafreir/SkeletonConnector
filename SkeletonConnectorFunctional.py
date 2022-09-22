@@ -8,28 +8,26 @@ In my personal pipeline, this is used to make a skeleton from my hair driven sce
 
 # STANDARD LIB IMPORTS
 import maya.cmds
-import re
 import pymel.core as pm
 
 # LOCAL APP IMPORTS
 
-# TODO replace Parent Constraint with a Matrix Constraint for performance and scene cleanliness
-# TODO Replace Parent Constraint setup with TRS as default
-# TODO Write data serialize function ([array[array]]> string
-# TODO Write data deserialize function (string > [array[array]])
-# TODO Rewrite in Pymel
 
 class Skeleton_Connector_Functional():
     def __init__(self):
-        self.fileinfo_key = "skeleton_attach"
+        self.WORLD_OBJ_NAME = "SKEL_CONNECTOR"
+        self.attrs = ["tx", "ty", "tz", "rx", "ry", "rz", "sx", "sy", "sz"]
+        self.ensure_scene_setup()
 
-    def data_in_fileinfo_key(self) -> bool:
-        data_exists = True if re.search('[a-zA-Z]', str(maya.cmds.fileInfo(self.fileinfo_key, query=True))) else False
-        return data_exists
+    def ensure_scene_setup(self):
+        if not pm.objExists(self.WORLD_OBJ_NAME):
+            pm.createNode("transform", name=self.WORLD_OBJ_NAME)
+        pm.PyNode(self.WORLD_OBJ_NAME).hiddenInOutliner.set(1)
 
-    def skeleton_attach(self, rig_ns: str, driven_ns: str, top_level_joint: str, connect_type:str):
+    def skeleton_attach(self, rig_ns: str, driven_ns: str, top_level_joint: str):
+        self.ensure_scene_setup()
+
         rig_tlj = f"{rig_ns}:{top_level_joint}"
-        driven_tlj = f"{driven_ns}:{top_level_joint}"
 
         rig_joints = maya.cmds.listRelatives(rig_tlj, children=True, allDescendents=True)
         rig_joints.insert(0, rig_tlj)
@@ -38,83 +36,36 @@ class Skeleton_Connector_Functional():
             joint_name = x.split(":")[1]
             driven = f"{driven_ns}:{joint_name}"
             driver = x
-            if connect_type == "Direct TransRotScale":
-                attrs = ["tx", "ty", "tz", "rx", "ry", "rz", "sx", "sy", "sz"]
-                for attr in attrs:
-                    try:
-                        maya.cmds.connectAttr(f"{driver}.{attr}", f"{driven}.{attr}")
-                    except:
-                        pass
-                print(f"Connected TRS of {driver} to {driven}")
+            for attr in self.attrs:
+                try:
+                    pm.connectAttr(f"{driver}.{attr}", f"{driven}.{attr}")
+                except RuntimeError:
+                    pass
+            print(f"Connected TRS of {driver} to {driven}")
 
-            elif connect_type == "Parent Constraint":
-                if maya.cmds.objExists(driven):
-                    maya.cmds.parentConstraint(driver, driven)
+        new_info = f"{driven_ns}:{rig_ns}:{top_level_joint}"
+        pm.addAttr(self.WORLD_OBJ_NAME, longName=f"SA_{driven_ns}_{top_level_joint}", attributeType="enum", en=new_info)
 
-                print(f"Parent constrained {driver} to {driven}")
-
-        # Get scene info from fileInfo
-        if self.data_in_fileinfo_key():
-            skel_attach_scene_info = maya.cmds.fileInfo(self.fileinfo_key, query=True)[0]
-        else:
-            skel_attach_scene_info = ""
-
-        # append new scene info
-        new_info = f"{rig_ns}|{driven_ns}|{top_level_joint}"
-
-        if self.data_in_fileinfo_key():
-            skel_attach_scene_info = f"{skel_attach_scene_info},{new_info}"
-        else:
-            skel_attach_scene_info = f"{new_info}"
-        maya.cmds.fileInfo(self.fileinfo_key, skel_attach_scene_info)
-
-        print("full info: ", skel_attach_scene_info)
-
+        print("full info: ", new_info)
 
     def load_scene_constraint_data(self):
-        scene_data = maya.cmds.fileInfo(self.fileinfo_key, query=True)
+        tool_attr_names = [i for i in pm.listAttr(self.WORLD_OBJ_NAME) if i.startswith("SA_")]
+
         sorted_scene_data = []
-        if self.data_in_fileinfo_key():
-            scene_data = maya.cmds.fileInfo(self.fileinfo_key, query=True)[0]
-            parsed_scene_data = scene_data.split(",")
-            for item in parsed_scene_data:
-                item_split = item.split("|")
-                #       "{rig_ns}|              {driven_ns}|     {top_level_joint}"
-                data = f"{item_split[0]}  <--  {item_split[1]}  (tlj:{item_split[2]})"
-                sorted_scene_data.append(data)
+
+        for attr in tool_attr_names:
+            enum_str = pm.attributeQuery(attr, node=self.WORLD_OBJ_NAME, listEnum=True)[0]
+            enum_arr = enum_str.split(":")
+            driven, driver, tlj = enum_arr[0], enum_arr[1], enum_arr[2]
+
+            sorted_scene_data.append(f"{driven}  <--  {driver}  (tlj:{tlj})")
+
         return sorted_scene_data
 
+    def skeleton_detach(self, rig_ns: str, driven_ns: str, top_level_joint: str):
+        self.ensure_scene_setup()
 
-    def skeleton_detach(self, rig_ns: str, driven_ns: str, top_level_joint: str, connect_type:str):
-        # hate how fileinfo smushes everything down to a single string, actual nightmare
-        scene_data = maya.cmds.fileInfo(self.fileinfo_key, query=True)
-        print(scene_data)
-        sorted_scene_data = []
-        if scene_data:
-            scene_data = maya.cmds.fileInfo(self.fileinfo_key, query=True)[0]
-            parsed_scene_data = scene_data.split(",")
-            for item in parsed_scene_data:
-                if all(x for x in item.split("|") if x in [rig_ns, driven_ns, top_level_joint]):
-                    # remove item from fileinfo
-                    temp_remove_string = f"{rig_ns}|{driven_ns}|{top_level_joint}"
-                    scene_data_split = scene_data.split(temp_remove_string)
-
-                    if len(scene_data_split) > 1:
-                        updated_fileinfo = ",".join(scene_data_split)
-                    else:
-                        updated_fileinfo = scene_data_split
-
-                    maya.cmds.fileInfo(self.fileinfo_key, updated_fileinfo)
-
-                    # TODO Check that it isn't left with just a "," in the fileinfo
-
-                    print("Updated skeleton_attach fileinfo", maya.cmds.fileInfo(self.fileinfo_key, query=True))
-
-                    # Remove constraints
-                    for object in pm.PyNode(f"{driven_ns}:{top_level_joint}").getChildren(ad=True):
-                        if pm.objectType(object) == "parentConstraint":
-                            pm.delete(object)
-
-    def wipe_relevant_fileinfo(self, are_you_sure=False):
-        if are_you_sure:
-            maya.cmds.fileInfo(self.fileinfo_key, "")
+        pm.deleteAttr(self.WORLD_OBJ_NAME, attribute=f"SA_{rig_ns}_{top_level_joint}")
+        for obj in pm.PyNode(f"{driven_ns}:{top_level_joint}").getChildren(ad=True):
+            for attr in ["tx", "rx", "sx"]:
+                pm.disconnectAttr(obj, attr)
