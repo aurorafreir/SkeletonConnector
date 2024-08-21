@@ -13,7 +13,7 @@ import pymel.core as pm
 # LOCAL APP IMPORTS
 
 
-class Skeleton_Connector_Functional():
+class SkeletonConnectorFunctional():
     def __init__(self):
         self.WORLD_OBJ_NAME = "SKEL_CONNECTOR"
         self.attrs = ["tx", "ty", "tz", "rx", "ry", "rz", "sx", "sy", "sz"]
@@ -21,10 +21,12 @@ class Skeleton_Connector_Functional():
 
     def ensure_scene_setup(self):
         if not pm.objExists(self.WORLD_OBJ_NAME):
-            pm.createNode("transform", name=self.WORLD_OBJ_NAME)
+            pm.createNode(pm.nt.Transform, name=self.WORLD_OBJ_NAME)
         pm.PyNode(self.WORLD_OBJ_NAME).hiddenInOutliner.set(1)
 
-    def skeleton_attach(self, rig_ns: str, driven_ns: str, top_level_joint: str):
+        return None
+
+    def skeleton_attach(self, rig_ns: str, driven_ns: str, top_level_joint: str) -> None:
         self.ensure_scene_setup()
 
         rig_tlj = f"{rig_ns}:{top_level_joint}"
@@ -46,7 +48,9 @@ class Skeleton_Connector_Functional():
         new_info = f"{driven_ns}:{rig_ns}:{top_level_joint}"
         pm.addAttr(self.WORLD_OBJ_NAME, longName=f"SA_{driven_ns}_{top_level_joint}", attributeType="enum", en=new_info)
 
-        print("full info: ", new_info)
+        print(f"full info: {new_info}")
+
+        return None
 
     def load_scene_constraint_data(self):
         tool_attr_names = [i for i in pm.listAttr(self.WORLD_OBJ_NAME) if i.startswith("SA_")]
@@ -69,3 +73,5 @@ class Skeleton_Connector_Functional():
         for obj in pm.PyNode(f"{driven_ns}:{top_level_joint}").getChildren(ad=True):
             for attr in ["tx", "rx", "sx"]:
                 pm.disconnectAttr(obj, attr)
+
+        return None

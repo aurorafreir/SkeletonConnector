@@ -1,33 +1,32 @@
 """
-
+UI script for the SkeletonConnector tool
 """
 
 # SYSTEM IMPORTS
-
-# STANDARD LIB IMPORTS
-
-# LOCAL APP IMPORTS
 from importlib import reload
 
+# STANDARD LIB IMPORTS
 import maya.OpenMayaUI as omui
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 import pymel.core as pm
 from PySide2 import QtCore
 from PySide2 import QtWidgets
-from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from shiboken2 import wrapInstance
 
+# LOCAL APP IMPORTS
 from . import SkeletonConnectorFunctional
-
 reload(SkeletonConnectorFunctional)
+
 
 def maya_main_window():
     main_window_ptr = omui.MQtUtil.mainWindow()
     return wrapInstance(int(main_window_ptr), QtWidgets.QWidget)
 
+
 class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super(SkeletonConnectorUI, self).__init__()
-        self.SkeletonConnectorFunctional = SkeletonConnectorFunctional.Skeleton_Connector_Functional()
+        self.SkeletonConnectorFunctional = SkeletonConnectorFunctional.SkeletonConnectorFunctional()
         self.create_widget()
         self.populate_constraint_list()
 
@@ -38,6 +37,8 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
             top_level_joint=self.tlj_textbox.text()
         )
         self.populate_constraint_list()
+
+        return None
 
     def execute_skeleton_detach(self):
         selected_items = self.existing_constraints.selectedItems()
@@ -52,20 +53,28 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
                                                         top_level_joint=top_level_joint)
         self.populate_constraint_list()
 
+        return None
+
     def driver_ns_pickwhip(self):
         selection = pm.selected()[0]
         driver_ns = selection.name().split(":")[0]
         self.driver_textbox.setText(driver_ns)
+
+        return None
 
     def driven_ns_pickwhip(self):
         selection = pm.selected()[0]
         driven_ns = selection.name().split(":")[0]
         self.driven_textbox.setText(driven_ns)
 
+        return None
+
     def tlj_name_pickwhip(self):
         selection = pm.selected()[0]
         tlj_name = selection.name().split(":")[1]
         self.tlj_textbox.setText(tlj_name)
+
+        return None
 
     def populate_constraint_list(self):
         # Read data from functional
@@ -77,6 +86,8 @@ class SkeletonConnectorUI(MayaQWidgetDockableMixin, QtWidgets.QWidget):
             list_item.setText(f"{data}")
             list_item = QtWidgets.QListWidgetItem(self.existing_constraints)
             list_item.setSelected(True)
+
+        return None
 
     def create_widget(self):
         self.setWindowFlags(QtCore.Qt.Tool)
